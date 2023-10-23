@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="output.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+		integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+		crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body class="bg-slate-700">
+	<div class="titleImg max-w-[300px] m-auto py-3">
+		<img src="https://www.papajohns.az/img/content/pj_logo_web_new.png" alt="">
+	</div>
+	<div class="w-100 flex justify-center items-center gap-5">
+		<div class="relative mt-2 rounded-md shadow-sm">
+			<input oninput="print()" type="text" name="price" id="input"
+				class="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+				placeholder="Yemək axtarın...">
+			<div class="absolute inset-y-0 right-0 flex items-center">
+				<select onchange="print()" id="select" name="currency"
+					class="h-full rounded-md border-0 bg-transparent py-0 pl-2 pr-7 text-gray-500 sm:text-sm">
+
+				</select>
+			</div>
+		</div>
+		<i onclick="modal(false)" class="fa-solid fa-cart-shopping text-slate-200 text-xl"></i>
+	</div>
+	<div class="flex gap-5 justify-center flex-wrap m-5 " id="cards">
+	</div>
+
+	<div id="slideOver" class="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+		<div class="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity"></div>
+
+		<div class="fixed inset-0 overflow-hidde">
+			<div class="absolute inset-0 overflow-hidden">
+				<div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+					<div class="pointer-events-auto relative w-screen max-w-md">
+						<div class="absolute left-0 top-0 -ml-8 flex pr-2 pt-4 sm:-ml-10 sm:pr-4">
+							<button type="button"
+								class="relative rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-white">
+								<span onclick="modal(true)" class="absolute -inset-2.5"></span>
+								<span class="sr-only">Close panel</span>
+								<svg class=" h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+									stroke="currentColor" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+								</svg>
+							</button>
+						</div>
+
+						<div class="cartPanel flex h-full flex-col overflow-y-scroll py-6 shadow-xl bg-gray-900">
+							<div class="px-4 sm:px-6">
+								<h2 class="text-base font-semibold leading-6 text-white" id="slide-over-title">
+									Səbətdəkilər:</h2>
+							</div>
+							<div id="basket" class="relative mt-6 flex-1 px-4 sm:px-6">
+
+							</div>
+							<button
+								id="summaBtn" class="mx-auto w-80 py-5 px-2 my-3 bg-purple-600 rounded-lg text-white font-bold">Səbətdə
+								heç nə yoxdur.. ( 0 AZN )</button>
+							<button
+								onclick="empty()" class="mx-auto w-80 py-2 px-2 bg-orange-500 rounded-lg text-white font-bold ">Səbəti boşalt</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+	const cards = document.getElementById('cards')
+	const input = document.getElementById('input')
+	const select = document.getElementById('select')
+
+	let kod = ''
+
+	const print = () => {
+		kod = ''
+		fetch("https://raw.githubusercontent.com/TheOksigen/purfect_data/main/yemekler.json")
+			.then(res => res.json())
+			.then(data => data.data.food
+				.filter(item => item.category.includes(select.value))
+				.filter(item => item.name.toLowerCase().includes(input.value.toLowerCase()))
+				.map(item => {
+					kod += `<div class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+				<a href="#">
+					<img class="rounded-t-lg w-full max-h-[200px]" src="${item.img}" alt="" />
+				</a>
+				<div class="p-5">
+					<a href="#">
+						<h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">${item.name}</h5>
+					</a>
+					<p class="mb-3 font-normal text-gray-700 dark:text-gray-400">${item.composition}</p>
+					<a data-elvin = '${JSON.stringify(item)}' onclick = "buy(this, '${item.id}')" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+						${item.price} AZN
+					</a>
+				</div>
+			</div>`
+					cards.innerHTML = kod
+				}))
+	}
+	print()
+
+	const slideOver = document.getElementById('slideOver')
+	const basket = document.getElementById('basket')
+
+	const modal = (x = true) => {
+		slideOver.style.display = x ? 'none' : 'block'
+	}
+	modal()
+
+	async function addOptions() {
+		const allData = await fetch("https://raw.githubusercontent.com/TheOksigen/purfect_data/main/yemekler.json")
+		const data = await allData.json()
+		data.data.category.map(item => {
+			select.innerHTML += `<option value = '${item == 'Bütün' ? '' : item}'>${item}</option>`
+		})
+		console.log(data.data);
+	}
+	addOptions()
+
+	let count = 1
+	let idArr = []
+	let cem = 0
+	const summaBtn = document.getElementById('summaBtn')
+
+	const buy = (btn) => {
+		const itemData = JSON.parse(btn.getAttribute('data-elvin'))
+		btn.style.background = 'green'
+		btn.innerHTML = 'Səbətə əlavə olundu'
+		setTimeout(() => {
+			btn.style.background = ''
+			btn.innerHTML = `${itemData.price} AZN`
+		}, 1000)
+
+		let cartdId = idArr.find(item => item.id == itemData.id)
+		if (!cartdId) {
+			idArr.push({ count: count, ...itemData })
+			summaBtn.innerHTML = `Səbəti tamamla ✔ (${cem += itemData.price}) AZN`
+			summaBtn.style.background = 'green'
+			basketPrint()
+		} else {
+			cartdId.count++
+			summaBtn.innerHTML = `Səbəti tamamla ✔ (${cem += itemData.price} AZN)`
+			summaBtn.style.background = 'green'
+			basketPrint()
+		}
+	}
+
+	let kod2 = ''
+	function basketPrint() {
+		kod2 = ''
+		idArr.map((item, index) => kod2 += `
+											<div class="relative basketCard w-100 flex justify-between my-3 items-center bg-slate-700 text-white rounded-xl overflow-hidden" id="">
+												<div class="card-left w-3/6 bg-black"><img class="w-100" src='${item.img}'></img>
+												</div>
+												<div class="card-right w-4/7 flex flex-col align-center pr-10">
+													<div onclick ="remove('${item.id}', ${index})" class='removeBtn absolute right-5 top-3 text-2xl'>x</div>
+													<span><b>${item.name.slice(0, 13)}...</b></span>
+													<span><b>Qiymət:</b> ${item.price} AZN</span>
+													<div class='Cardcount'>
+														<button onclick="say(-1,'${index}', '${item.id}')">-</button>
+														<span id='${item.id}' class="p-5">${item.count}</span>
+														<button onclick="say(1, '${index}', '${item.id}')">+</button>
+													</div>
+												</div>
+											</div>
+												`)
+		basket.innerHTML = kod2
+	}
+
+	function say(n, index, id) {
+		idArr[index].count += n
+		if (idArr[index].count == 0) {
+			summaBtn.innerHTML = `Səbəti tamamla ✔ (${cem -= idArr[index].price} AZN)`
+			let cartIndex = idArr.findIndex(item => item.id == id)
+			idArr.splice(cartIndex, 1)
+		} else {
+			summaBtn.innerHTML = `Səbəti tamamla ✔ (${cem += n * idArr[index].price} AZN)`
+		}
+		checkSumma()
+		basketPrint()
+	}
+
+	function remove(id, mapIndex) {
+		summaBtn.innerHTML = `Səbəti tamamla ✔ (${cem -= idArr[mapIndex].count * idArr[mapIndex].price} AZN)`
+		let index = idArr.findIndex(item => item.id  == id)
+		idArr.splice(index,1)
+		basketPrint()
+		checkSumma()
+	}
+
+	function empty() {
+		basket.innerHTML = ''
+		idArr = []
+		cem = 0
+		checkSumma()
+	}
+
+	function checkSumma() {
+		if (cem == 0) {
+			summaBtn.innerHTML = `Səbətdə heç nə yoxdur.. ( 0 AZN )`
+			summaBtn.style.background = 'rgb(147 51 234 / var(--tw-bg-opacity)'
+		}
+	}
+</script>
+
+</html>
